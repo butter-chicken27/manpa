@@ -11,3 +11,12 @@ venv.bak/
 __pycache__/
 
 .pytest_cache/
+
+# SSL Certificates
+*.pem
+*.key
+*.crt
+*.csr
+*.srl
+certs/
+localhost.conf
