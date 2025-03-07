@@ -1,9 +1,11 @@
 from fastapi import FastAPI
 from models import MsgPayload
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
 messages_list: dict[int, MsgPayload] = {}
 
+app.mount("/app",StaticFiles(directory="static",html = True),name="static")
 
 @app.get("/")
 def root() -> dict[str, str]:
