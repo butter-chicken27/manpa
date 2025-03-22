@@ -6,6 +6,13 @@ exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 # Update system packages
 sudo yum update -y
 
+
+sudo su
+curl https://packages.microsoft.com/config/rhel/8/prod.repo > /etc/yum.repos.d/mssql-release.repo
+exit
+sudo ACCEPT_EULA=Y yum install -y msodbcsql17
+sudo yum install -y unixODBC-devel
+
 # Install Python and required tools
 sudo yum install -y python3-pip git
 
