@@ -14,7 +14,7 @@ from httpx_oauth.clients.google import GoogleOAuth2
 
 from db import User, get_user_db
 
-SECRET = "SECRET"
+SECRET = os.getenv("SECRET", "SECRET1234")
 
 google_oauth_client = GoogleOAuth2(
     os.getenv("GOOGLE_OAUTH_CLIENT_ID", ""),
