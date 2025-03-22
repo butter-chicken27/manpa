@@ -1,9 +1,23 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from typing import List, Dict
 from models import MsgPayload
+from contextlib import asynccontextmanager
 from fastapi.staticfiles import StaticFiles
+from database import Database2
+import pyodbc
 
-app = FastAPI()
-messages_list: dict[int, MsgPayload] = {}
+
+db = Database2()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    db.connect()
+    yield
+    # Shutdown
+    db.disconnect()
+
+app = FastAPI(lifespan=lifespan)
 
 app.mount("/app",StaticFiles(directory="static",html = True),name="static")
 
@@ -20,15 +34,35 @@ def about() -> dict[str, str]:
 
 # Route to add a message
 @app.post("/messages/{msg_name}/")
-def add_msg(msg_name: str) -> dict[str, MsgPayload]:
-    # Generate an ID for the item based on the highest ID in the messages_list
-    msg_id = max(messages_list.keys()) + 1 if messages_list else 0
-    messages_list[msg_id] = MsgPayload(msg_id=msg_id, msg_name=msg_name)
+def add_msg(msg_name: str) -> Dict:
+    try:
+        with db.get_cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO Users (FirstName, LastName) VALUES (?, ?)", 
+                msg_name, 'test'
+            )
+            msg_id = cursor.fetchone()[0]
+            return {
+                "message": {
+                    "first_name": msg_name,
+                    "last_name": "test"
+                }
+            }
+    except pyodbc.Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-    return {"message": messages_list[msg_id]}
-
-
-# Route to list all messages
 @app.get("/messages")
-def message_items() -> dict[str, dict[int, MsgPayload]]:
-    return {"messages:": messages_list}
+def message_items() -> Dict[str, List[Dict[str, str]]]:
+    try:
+        with db.get_cursor() as cursor:
+            cursor.execute("SELECT * FROM Users")
+            rows = cursor.fetchall()
+            messages = [
+                {
+                    "first_name": row.FirstName,
+                    "last_name": row.LastName
+                } for row in rows
+            ]
+            return {"messages": messages}
+    except pyodbc.Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
