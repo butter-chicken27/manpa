@@ -41,7 +41,7 @@ def add_msg(msg_name: str) -> Dict:
                 "INSERT INTO Users (FirstName, LastName) VALUES (?, ?)", 
                 msg_name, 'test'
             )
-            msg_id = cursor.fetchone()[0]
+            db.connection.commit()
             return {
                 "message": {
                     "first_name": msg_name,
