@@ -1,3 +1,5 @@
 fastapi
+fastapi-users[sqlalchemy,oauth]
+aiosqlite
 uvicorn
 httpx
