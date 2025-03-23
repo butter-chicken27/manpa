@@ -1,23 +1,12 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse # todo: remove if not needed
 from typing import List, Dict
-from models import MsgPayload
-from contextlib import asynccontextmanager
 from fastapi.staticfiles import StaticFiles
-from database import Database2
-import pyodbc
+from database import Database
+from orm.user import DBUser
 
-
-db = Database2()
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    db.connect()
-    yield
-    # Shutdown
-    db.disconnect()
-
-app = FastAPI(lifespan=lifespan)
+db = Database()
+app = FastAPI()
 
 app.mount("/app",StaticFiles(directory="static",html = True),name="static")
 
@@ -35,34 +24,31 @@ def about() -> dict[str, str]:
 # Route to add a message
 @app.post("/messages/{msg_name}/")
 def add_msg(msg_name: str) -> Dict:
+    session = db.getSession()
     try:
-        with db.get_cursor() as cursor:
-            cursor.execute(
-                "INSERT INTO Users (FirstName, LastName) VALUES (?, ?)", 
-                msg_name, 'test'
-            )
-            db.connection.commit()
-            return {
-                "message": {
-                    "first_name": msg_name,
-                    "last_name": "test"
-                }
-            }
-    except pyodbc.Error as e:
+        details = {"firstName": msg_name, "lastName": "test"}
+        user = DBUser(**details)
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+        return {"message": {"first_name": user.firstName, "last_name": user.lastName}}
+    except Exception as e:
+        session.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        session.close()
 
 @app.get("/messages")
 def message_items() -> Dict[str, List[Dict[str, str]]]:
     try:
-        with db.get_cursor() as cursor:
-            cursor.execute("SELECT * FROM Users")
-            rows = cursor.fetchall()
+        with db.getSession() as session:
+            users = session.query(DBUser).all()
             messages = [
                 {
-                    "first_name": row.FirstName,
-                    "last_name": row.LastName
-                } for row in rows
+                    "first_name": user.firstName,
+                    "last_name": user.lastName
+                } for user in users
             ]
             return {"messages": messages}
-    except pyodbc.Error as e:
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
