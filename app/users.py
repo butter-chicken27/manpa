@@ -13,12 +13,16 @@ from fastapi_users.db import SQLAlchemyUserDatabase
 from httpx_oauth.clients.google import GoogleOAuth2
 
 from db import User, get_user_db
+from dotenv import load_dotenv
+
+load_dotenv()
 
 SECRET = os.getenv("SECRET", "SECRET1234")
 
 google_oauth_client = GoogleOAuth2(
     os.getenv("GOOGLE_OAUTH_CLIENT_ID", ""),
     os.getenv("GOOGLE_OAUTH_CLIENT_SECRET", ""),
+    scopes=['openid', 'email']
 )
 
 

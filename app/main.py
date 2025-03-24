@@ -15,6 +15,11 @@ from users import (
     google_oauth_client,
 )
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Not needed if you setup a migration system like Alembic
@@ -50,7 +55,7 @@ app.include_router(
     tags=["users"],
 )
 app.include_router(
-    fastapi_users.get_oauth_router(google_oauth_client, auth_backend, SECRET, associate_by_email=True, is_verified_by_default=True),
+    fastapi_users.get_oauth_router(google_oauth_client, auth_backend, SECRET, os.getenv('REDIRECT_URI'), associate_by_email=True, is_verified_by_default=True),
     prefix="/auth/google",
     tags=["auth"],
 )
@@ -86,4 +91,4 @@ def message_items() -> dict[str, dict[int, MsgPayload]]:
     return {"messages:": messages_list}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+    uvicorn.run(app, host="127.0.0.1", port=5000)
