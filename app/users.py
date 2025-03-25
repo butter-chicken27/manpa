@@ -22,7 +22,6 @@ SECRET = os.getenv("SECRET", "SECRET1234")
 google_oauth_client = GoogleOAuth2(
     os.getenv("GOOGLE_OAUTH_CLIENT_ID", ""),
     os.getenv("GOOGLE_OAUTH_CLIENT_SECRET", ""),
-    scopes=['openid', 'email']
 )
 
 
