@@ -1,9 +1,13 @@
 import uvicorn
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from models import MsgPayload
+from fastapi.responses import JSONResponse # todo: remove if not needed
+from typing import List, Dict
 from fastapi.staticfiles import StaticFiles
+from database import Database
+from orm.user import DBUser
 
 from db import User, create_db_and_tables
 from schemas import UserCreate, UserRead, UserUpdate
@@ -26,6 +30,7 @@ async def lifespan(app: FastAPI):
     await create_db_and_tables()
     yield
 
+db = Database()
 app = FastAPI(lifespan=lifespan)
 messages_list: dict[int, MsgPayload] = {}
 
@@ -77,18 +82,35 @@ def about() -> dict[str, str]:
 
 # Route to add a message
 @app.post("/messages/{msg_name}/")
-def add_msg(msg_name: str) -> dict[str, MsgPayload]:
-    # Generate an ID for the item based on the highest ID in the messages_list
-    msg_id = max(messages_list.keys()) + 1 if messages_list else 0
-    messages_list[msg_id] = MsgPayload(msg_id=msg_id, msg_name=msg_name)
+def add_msg(msg_name: str) -> Dict:
+    session = db.getSession()
+    try:
+        details = {"firstName": msg_name, "lastName": "test"}
+        user = DBUser(**details)
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+        return {"message": {"first_name": user.firstName, "last_name": user.lastName}}
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        session.close()
 
-    return {"message": messages_list[msg_id]}
-
-
-# Route to list all messages
 @app.get("/messages")
-def message_items() -> dict[str, dict[int, MsgPayload]]:
-    return {"messages:": messages_list}
+def message_items() -> Dict[str, List[Dict[str, str]]]:
+    try:
+        with db.getSession() as session:
+            users = session.query(DBUser).all()
+            messages = [
+                {
+                    "first_name": user.firstName,
+                    "last_name": user.lastName
+                } for user in users
+            ]
+            return {"messages": messages}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=5000)
