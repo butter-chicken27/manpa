@@ -35,6 +35,7 @@ app = FastAPI(lifespan=lifespan)
 messages_list: dict[int, MsgPayload] = {}
 
 app.mount("/app",StaticFiles(directory="static",html = True),name="static")
+app.mount("/redirect",StaticFiles(directory="static",html = True),name="static")
 
 app.include_router(
     fastapi_users.get_auth_router(auth_backend), prefix="/auth/jwt", tags=["auth"]

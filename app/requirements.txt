@@ -5,5 +5,4 @@ aiosqlite
 uvicorn
 httpx
 pyodbc
-python-dotenv
 sqlalchemy
