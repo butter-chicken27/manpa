@@ -61,7 +61,7 @@ app.include_router(
     tags=["users"],
 )
 app.include_router(
-    fastapi_users.get_oauth_router(google_oauth_client, auth_backend, SECRET, os.getenv('REDIRECT_URI'), associate_by_email=True, is_verified_by_default=True),
+    fastapi_users.get_oauth_router(google_oauth_client, auth_backend, SECRET, "https://www.manpa.co.in/redirect", associate_by_email=True, is_verified_by_default=True),
     prefix="/auth/google",
     tags=["auth"],
 )
