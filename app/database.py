@@ -2,7 +2,6 @@ from contextlib import contextmanager
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from config import DATABASE_URL
-from orm import Base
 
 class Database:
     def __init__(self):

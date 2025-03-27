@@ -1,8 +1,6 @@
-import uvicorn
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException
-from models import MsgPayload
 from fastapi.responses import JSONResponse # todo: remove if not needed
 from typing import List, Dict
 from fastapi.staticfiles import StaticFiles
@@ -19,11 +17,6 @@ from users import (
     google_oauth_client,
 )
 
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Not needed if you setup a migration system like Alembic
@@ -32,7 +25,6 @@ async def lifespan(app: FastAPI):
 
 db = Database()
 app = FastAPI(lifespan=lifespan)
-messages_list: dict[int, MsgPayload] = {}
 
 app.mount("/app",StaticFiles(directory="static",html = True),name="static")
 app.mount("/redirect",StaticFiles(directory="static",html = True),name="static")
@@ -112,6 +104,3 @@ def message_items() -> Dict[str, List[Dict[str, str]]]:
             return {"messages": messages}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=5000)
