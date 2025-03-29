@@ -8,5 +8,5 @@ DATABASE_URL = (
     f"{os.getenv('AZURE_SQL_PASSWORD')}@"
     f"{os.getenv('AZURE_SQL_SERVER')}/"
     f"{os.getenv('AZURE_SQL_DATABASE')}?"
-    f"driver=ODBC+Driver+17+for+SQL+Server"
+    f"driver={os.getenv('AZURE_SQL_DRIVER')}"
 )

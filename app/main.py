@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse # todo: remove if not needed
 from typing import List, Dict
 from fastapi.staticfiles import StaticFiles
 from database import Database
-from orm.user import DBUser
+from orm.user import User
 
 db = Database()
 app = FastAPI()
@@ -24,19 +24,17 @@ def about() -> dict[str, str]:
 # Route to add a message
 @app.post("/messages/{msg_name}/")
 def add_msg(msg_name: str) -> Dict:
-    session = db.getSession()
-    try:
-        details = {"firstName": msg_name, "lastName": "test"}
-        user = DBUser(**details)
-        session.add(user)
-        session.commit()
-        session.refresh(user)
-        return {"message": {"first_name": user.firstName, "last_name": user.lastName}}
-    except Exception as e:
-        session.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        session.close()
+    with db.getSession() as session:
+        try:
+            details = {"first_name": msg_name, "last_name": "test", "email": "vik@g.com", "role": "client"}
+            user = User(**details)
+            session.add(user)
+            session.commit()
+            session.refresh(user)
+            return {"message": {"first_name": user.first_name, "last_name": user.last_name}}
+        except Exception as e:
+            session.rollback()
+            raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/messages")
 def message_items() -> Dict[str, List[Dict[str, str]]]:
