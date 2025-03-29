@@ -4,6 +4,7 @@ from typing import List, Dict
 from fastapi.staticfiles import StaticFiles
 from database import Database
 from orm.user import User
+from models.user import UserBase, UserResponse
 
 db = Database()
 app = FastAPI()
@@ -22,31 +23,19 @@ def about() -> dict[str, str]:
 
 
 # Route to add a message
-@app.post("/messages/{msg_name}/")
-def add_msg(msg_name: str) -> Dict:
+@app.post("/users", response_model=UserResponse)
+def add_user(user_data: UserBase) -> UserResponse:
     with db.getSession() as session:
         try:
-            details = {"first_name": msg_name, "last_name": "test", "email": "vik@g.com", "role": "client"}
-            user = User(**details)
-            session.add(user)
-            session.commit()
-            session.refresh(user)
-            return {"message": {"first_name": user.first_name, "last_name": user.last_name}}
+            return UserResponse.create(session, user_data)
         except Exception as e:
             session.rollback()
             raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/messages")
-def message_items() -> Dict[str, List[Dict[str, str]]]:
-    try:
-        with db.getSession() as session:
-            users = session.query(DBUser).all()
-            messages = [
-                {
-                    "first_name": user.firstName,
-                    "last_name": user.lastName
-                } for user in users
-            ]
-            return {"messages": messages}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+@app.get("/users", response_model=List[UserResponse])
+def get_users() -> List[UserResponse]:
+    with db.getSession() as session:
+        try:
+            return UserResponse.getAllUsers(session)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
