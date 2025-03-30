@@ -1,3 +1,4 @@
+import uvicorn
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -7,6 +8,8 @@ from fastapi.staticfiles import StaticFiles
 from database import Database
 from orm.user import User
 from models.user import UserBase, UserResponse
+from fastapi.responses import RedirectResponse
+from fastapi.exceptions import HTTPException
 
 from db import User, create_db_and_tables
 from schemas import UserCreate, UserRead, UserUpdate
@@ -28,31 +31,7 @@ db = Database()
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(
-    fastapi_users.get_auth_router(auth_backend), prefix="/auth/jwt", tags=["auth"]
-)
-app.include_router(
-    fastapi_users.get_register_router(UserRead, UserCreate),
-    prefix="/auth",
-    tags=["auth"],
-)
-app.include_router(
-    fastapi_users.get_reset_password_router(),
-    prefix="/auth",
-    tags=["auth"],
-)
-app.include_router(
-    fastapi_users.get_verify_router(UserRead),
-    prefix="/auth",
-    tags=["auth"],
-)
-app.include_router(
-    fastapi_users.get_users_router(UserRead, UserUpdate),
-    prefix="/users",
-    tags=["users"],
-)
-
-app.include_router(
-    fastapi_users.get_oauth_router(google_oauth_client, auth_backend, SECRET, "https://www.manpa.co.in/redirect", associate_by_email=True, is_verified_by_default=True),
+    fastapi_users.get_oauth_router(google_oauth_client, auth_backend, SECRET, "https://manpa.co.in/redirect", associate_by_email=True, is_verified_by_default=True),
     prefix="/auth/google",
     tags=["auth"],
 )
@@ -79,5 +58,12 @@ def get_users() -> List[UserResponse]:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
         
-app.mount("/",StaticFiles(directory="static",html = True),name="static")
-app.mount("/redirect", StaticFiles(directory="static", html=True), name="static")        
+@app.get("/")
+async def redirect_typer():
+    return RedirectResponse("/home")
+
+app.mount("/home", StaticFiles(directory="static", html=True), name="static")
+app.mount("/redirect", StaticFiles(directory="static", html=True), name="static")
+
+if __name__ == "__main__":
+     uvicorn.run(app, host="127.0.0.1", port=5000)
