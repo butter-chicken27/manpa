@@ -27,8 +27,6 @@ async def lifespan(app: FastAPI):
 db = Database()
 app = FastAPI(lifespan=lifespan)
 
-app.mount("/",StaticFiles(directory="static",html = True),name="static")
-
 app.include_router(
     fastapi_users.get_auth_router(auth_backend), prefix="/auth/jwt", tags=["auth"]
 )
@@ -80,3 +78,5 @@ def get_users() -> List[UserResponse]:
             return UserResponse.getAllUsers(session)
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+        
+app.mount("/",StaticFiles(directory="static",html = True),name="static")        
