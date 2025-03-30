@@ -1,4 +1,3 @@
-import uvicorn
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -64,6 +63,3 @@ async def redirect_typer():
 
 app.mount("/home", StaticFiles(directory="static", html=True), name="static")
 app.mount("/redirect", StaticFiles(directory="static", html=True), name="static")
-
-if __name__ == "__main__":
-     uvicorn.run(app, host="127.0.0.1", port=5000)
