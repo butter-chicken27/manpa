@@ -27,32 +27,8 @@ async def lifespan(app: FastAPI):
 db = Database()
 app = FastAPI(lifespan=lifespan)
 
-app.mount("/app",StaticFiles(directory="static",html = True),name="static")
-app.mount("/redirect",StaticFiles(directory="static",html = True),name="static")
+app.mount("/",StaticFiles(directory="static",html = True),name="static")
 
-app.include_router(
-    fastapi_users.get_auth_router(auth_backend), prefix="/auth/jwt", tags=["auth"]
-)
-app.include_router(
-    fastapi_users.get_register_router(UserRead, UserCreate),
-    prefix="/auth",
-    tags=["auth"],
-)
-app.include_router(
-    fastapi_users.get_reset_password_router(),
-    prefix="/auth",
-    tags=["auth"],
-)
-app.include_router(
-    fastapi_users.get_verify_router(UserRead),
-    prefix="/auth",
-    tags=["auth"],
-)
-app.include_router(
-    fastapi_users.get_users_router(UserRead, UserUpdate),
-    prefix="/users",
-    tags=["users"],
-)
 app.include_router(
     fastapi_users.get_oauth_router(google_oauth_client, auth_backend, SECRET, "https://www.manpa.co.in/redirect", associate_by_email=True, is_verified_by_default=True),
     prefix="/auth/google",
@@ -62,17 +38,6 @@ app.include_router(
 @app.get("/authenticated-route")
 async def authenticated_route(user: User = Depends(current_active_user)):
     return {"message": f"Hello {user.email}!"}
-
-@app.get("/")
-def root() -> dict[str, str]:
-    return {"message": "Hello"}
-
-
-# About page route
-@app.get("/about")
-def about() -> dict[str, str]:
-    return {"message": "This is the about page."}
-
 
 # Route to add a message
 @app.post("/users", response_model=UserResponse)
