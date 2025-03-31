@@ -57,5 +57,5 @@ def get_users() -> List[UserResponse]:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
-app.mount("/home", StaticFiles(directory="static", html=True), name="static")
+app.mount("/app", StaticFiles(directory="static", html=True), name="static")
 app.mount("/redirect", StaticFiles(directory="static", html=True), name="static")
