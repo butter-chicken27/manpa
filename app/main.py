@@ -30,7 +30,7 @@ db = Database()
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(
-    fastapi_users.get_oauth_router(google_oauth_client, auth_backend, SECRET, "https://manpa.co.in/redirect", associate_by_email=True, is_verified_by_default=True),
+    fastapi_users.get_oauth_router(google_oauth_client, auth_backend, SECRET, "https://www.manpa.co.in/redirect", associate_by_email=True, is_verified_by_default=True),
     prefix="/auth/google",
     tags=["auth"],
 )
@@ -57,5 +57,9 @@ def get_users() -> List[UserResponse]:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
-app.mount("/app", StaticFiles(directory="static", html=True), name="static")
+app.mount("/home", StaticFiles(directory="static", html=True), name="static")
 app.mount("/redirect", StaticFiles(directory="static", html=True), name="static")
+
+@app.get("/")
+async def redirect_typer():
+    return RedirectResponse("/home")
