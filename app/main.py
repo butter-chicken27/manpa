@@ -39,6 +39,10 @@ app.include_router(
 async def authenticated_route(user: User = Depends(current_active_user)):
     return {"message": f"Hello {user.email}!"}
 
+@app.get("/authenticated-user-details")
+async def authenticated_user_details(user: User = Depends(current_active_user)):
+    return user
+
 # Route to add a message
 @app.post("/users", response_model=UserResponse)
 def add_user(user_data: UserBase) -> UserResponse:
