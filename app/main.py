@@ -56,10 +56,6 @@ def get_users() -> List[UserResponse]:
             return UserResponse.getAllUsers(session)
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-        
-@app.get("/")
-async def redirect_typer():
-    return RedirectResponse("/home")
 
 app.mount("/home", StaticFiles(directory="static", html=True), name="static")
 app.mount("/redirect", StaticFiles(directory="static", html=True), name="static")
