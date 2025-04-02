@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
-
+from asyncio import create_task, sleep
+from sqlalchemy import text
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import JSONResponse # todo: remove if not needed
 from typing import List, Dict
@@ -20,11 +21,25 @@ from users import (
     google_oauth_client,
 )
 
+async def health_check():
+    while True:
+        try:
+            with db.getSession() as session:
+                session.execute(text("SELECT 1"))
+                session.commit()
+                print("Health check: Database connection successful")
+        except Exception as e:
+            print(f"Health check: Database connection failed - {str(e)}")
+        await sleep(300)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Not needed if you setup a migration system like Alembic
     await create_db_and_tables()
+    health_check_task = create_task(health_check())
     yield
+    # Cancel health check task on shutdown
+    health_check_task.cancel()
 
 db = Database()
 app = FastAPI(lifespan=lifespan)
